@@ -1,0 +1,133 @@
+;;CÉSAR GARCIA DAUDT - 180164 - TRABALHO 2 - AHMES
+
+
+			LDA 	zero
+			STA	passos			;;zerando variável de controle dos passos
+			LDA	mais_n
+			JZ	testa_menos		;;se bits mais significativos de n=0, ver se os menos significativos são também para confirmar se é 0
+			JMP	copia			;;se não for 0, copia n para variáveis parciais
+testa_menos:		LDA	menos_n			;;se n é 0
+			JZ	nao_possivel		;;o cálculo não é possível
+
+
+
+copia:			LDA	menos_n
+			STA 	menos_parcial		;;cópia para resultado parcial(MENOS)
+			LDA	mais_n			;;
+			STA	mais_parcial		;;cópia para resultado parcial(MAIS)
+
+
+
+teste:			LDA	menos_parcial
+			SUB	um			;;se "menos_parcial" =1,
+			JZ	testa_mais_parcial	;;testar "mais_parcial"
+
+
+
+testa_par:		LDA	menos_parcial		
+			SHR				;;se o bit menos significativo de "menos_parcial"é 0(É PAR)
+			JNC	divide_por_2		;;divide "mais_parcial" por 2
+			JMP	faz_3n_m_1		;;se não, o número é ímpar. Fazer 3n+1
+
+			
+	
+nao_possivel:		LDA	zero
+			STA	status			;;guarda 0 no estado do cálculo
+			STA	passos			;;guarda 0 em "passos", para garantia do restuldado
+			JMP	fim
+
+
+
+testa_mais_parcial:	LDA	mais_parcial		;;se "mais_parcial" =0, o número em 16 bits é 1 e o cálculo chegou ao fim
+			JZ	ultimo			;;pula para "ultimo", incrementando os passos pela útlima vez e após indo para o fim
+			JMP	testa_par		;;se não, testar se é par
+
+
+
+divide_por_2:		LDA	mais_parcial		
+			SHR				;;faz shift em "mais_parcial"-------|
+			STA	mais_parcial		;;guarda resultado parcial(MAIS)    |
+			LDA	menos_parcial		;;				    |--->DESLOCA TODOS OS BITS PARA DIREITA
+			ROR				;;faz rotate em "menos_parcial"     |
+			STA	menos_parcial		;;guarda resultado parcial(MENOS)---|
+			LDA	passos
+			ADD	um
+			STA	passos
+			JMP	teste
+
+
+
+faz_3n_m_1:		LDA	menos_parcial
+			STA	aux_parcial_me		;;varíavel auxiliar para o cálculo
+			SHL				;;faz shift em menos significativos---------------------|
+			STA	menos_parcial		;;guarda resultado parcial(MENOS)			|
+			LDA	mais_parcial		;;							|
+			STA	aux_parcial_Ma		;;varíavel auxiliar para o cálculo			|--->FAZ 2N(DESLOCA PARA ESQUERDA TODOS BITS)
+			ROL				;;faz rotate em mais significativos			|
+			STA	mais_parcial		;;guarda resultado parcial(MAIS)			|
+			JC	estouro			;;se cary=1, a múltiplicação por 2 provocou estouro.----|
+			LDA	mais_parcial			
+			ADD	aux_parcial_Ma		;;soma bits mais significativos (primeira parte de 2n + n)
+			STA	mais_parcial		;;guarda em mais_parcial
+			JC	estouro			;;se carry=1, houve estouro (tentativa de eliminar rapidamente casos com crescimentos de 3n+1 elevados)
+			LDA	menos_parcial
+			ADD	um			;;soma bits menos significativos de auxiliar (segunda parte de 2n + n e a parte +1)
+			ADD	aux_parcial_me
+			STA	menos_parcial		;;guarda em menos_parcial
+			JC	corrige_mais		;;se carry=1, é necessário corrigir o resultado de mais_significativos
+
+
+
+passos_incr:		LDA	passos
+			ADD	um
+			STA 	passos
+			JMP	teste
+	
+
+		
+corrige_mais:		LDA	mais_parcial
+			ADD	um			;;adiciona um na parte mais significativa para corrigir o resultado
+			STA 	mais_parcial			
+			JC	estouro			;;se carry=1, houve estouro na correção.
+			JMP	passos_incr
+			
+
+
+
+ORG	160
+ultimo:			LDA 	passos			;;DESVIO PARA ESTA ÁREA DE MEMÓRIA, POR FALTA DE ESPAÇO(END 160 - 182)
+			ADD	um			;;incrementa o número de passos
+			STA 	passos
+			LDA 	um
+			STA	status			;;Indica o status do cálculo como 1, pois foi realizado corretamente
+			JMP	fim
+
+
+
+estouro:		LDA	menos_1			;;Status do cálculo é -1, para indicar overflow
+			STA	status
+			LDA	zero
+			STA	passos			;;Por default, neste caso, os passos são 0
+			JMP	fim
+
+
+
+fim:			HLT
+
+
+
+ORG 128
+mais_n:		DB	0		;;bits mais siginificativos de n
+menos_n:	DB	0		;;bits menos significativos de n
+passos:		DB	0		;;nº de passos
+status:		DB	0		;;estado do cálculo
+
+
+ORG 249
+aux_parcial_Ma:	DB	0		;;variável auxiliar dos bits mais significativos para o cálculo de 3n+1
+aux_parcial_me:	DB	0		;;variável auxiliar dos bits menos significativos para o cálculo de 3n+1
+mais_parcial:	DB	0		;;bits mais significativos do resultado parcial
+menos_parcial:	DB	0		;;bits menos significativos do resultado parcial
+zero:		DB	0		;;constante 0
+um:		DB	1		;;constante 1
+menos_1:	DB	255		;;constante -1 (255)

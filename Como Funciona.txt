@@ -1,0 +1,237 @@
+Trabalho IFBA
+Geovane Chaves - 180164
+
+
+Abaixo há um comentário breve, no próprio código Assembler do programa. A seguir, encontra-se um breve detalhamento do funcionamento da calculadora.
+Qualquer dúvida do comentário no código, favor recorrer às explicações abaixo.
+----------------------------------------------------------------------------------------------------------------------------------
+
+No início do programa, são zeradas as variáveis necesárias, como "Acumula divisão"(end [242]),
+"Código de erro" (end[131]) e "Resultado"(end[132]). Outras variáveis utilizadas, como um contador, um somatório do resultado parcial da divisão
+e uma espécie controle da divisão ("Auxiliar divisão (end[243])) não são zeradas, devido ao algorítmo utilizado para a realização das operações.
+
+Como funciona a calculadora de fato:
+Do endereço 0 até 7, são zeradas as variáves necessárias (anteriormente já comentadas);
+
+De 8 até 15 e 40 até 67, garante-se a consistência dos dados, a saber: "Operando 1"(end[128]), "Operando 2"(end[129]),
+"Operação"(end[130]). Além disso, há o redirecionamento para outras áres de memória, onde de fato haverá o registro da
+validade ou não dos dados anteriormente mencionados;
+
+Entre os endereços 8 e 39, há o direcionamento para a área onde realiza-se a operação indicada. Para isso, subtrai-se 1, 2,
+3 ou 4 do "Operação" e, quando o resultado for zero, um JMP direciona para o setor correto do código.
+
+----------------------------------------------------------------------------------------------------------------------------------
+Algorítmos das operações:
+
+Multiplicação (end[68] - end[119]):
+O algorítmo utilizado realiza dois testes antes de se realizar a operação propriamente dita. Se "Operando 2" for zero, não é
+necessário realizar a operação, uma vez que o resultado sempre será zero. Com isso, há um redirecionamento (de end[70] vai para end[108])
+para que "Resultado" seja zero.
+O segundo teste confere se "Operando 2" é 1, pois se o for, o resultado será numericamente igual a "Operando 1". Assim, redireciona-se
+de end[74] para [114] e atribui-se "Operando 1" a "Resultado".
+Caso ambos os testes sejam falsos, "Operando 2" é armazenado em "Contador"(end[245]) e "Operando 1" em "Resultado parcial"(end[244]).
+A partir daí, realiza-se uma sequência de somas de "Operando 1" com "Operando 1" que são armazendas em "Resultado parcial" e a cada uma dessas
+somas é decrementado em 1 o valor de "Contador". Quando o valor deste for 1, o resultado correto já estará armazenado em "Resultado parcial", restando
+apenas armazená-lo em "Resultado" e finalizar o programa.
+
+Soma (end[120] - end[127]):
+Na realidade, a soma já é definida no computador Neander. Com isso, não há propriamente um algorítmo. Apenas realiza-se a soma dos dois operandos
+e armazena este valor em "Resultado".
+
+Divisão (end[133] - end[191]):
+Na divisão, incialmente há dois testes: 1) Se "Operando 2" for zero, desvia-se para end[166], onde será realizado o registro do número 5 na área
+destinada ao "Código de Erro"(end[131]), 2) Se "Operando 1" for 1, então a resposta é o "Operando 1". Assim, desvia-se para end[172], onde será feita 
+esta atribuição.
+Sendo falsos esses dois testes, o algorítmo guarda "Operando 1" em "Auxiliar divisão"(end[243]), pois este será o número a ser subtraído do denominador
+até que ele seja zero (assim, desvia-se para end[184], onde será feito o último incremento de 1 em "Acumula Divisão"(end[242]), já que o resto é zero e
+este quociente é inteiro) ou seja negativo (isto significa que após a série de subtrações, a divisão resulta em um quociente racional e não inteiro. Como
+esta calculadora trabalha apenas com números inteiros, desvia-se para end[178], onde só será armazenado o valor atual de "Acumula Divisão", sem necessitar
+o incremento anterior).
+
+Subtração (end[192] - end[202]):
+O algorítmo para se realizar a subtração em um computador que não dispõe dela pré-definida, mas apresenta reprentação numérica binária através de complemento de 2,
+consite em fazer "Operando1 - Operando2" transformar-se em "Operando1 + (- Operando2)". Com isso, realiza-se a operação lógica NOT("Operando 2") + 1 e soma-se a esse
+valor "Operando 1".
+----------------------------------------------------------------------------------------------------------------------------------
+
+Final da calculadora (end[203] - end[205]):
+Para garantir que não ocorra nenhum erro, é zerado o valor do ACUMULADOR. Esta medida é apenas preventiva, não sendo obrigatória para o funcionamento do código.
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+OBS.:
+
+
+De end[128] até end[132], têm-se as posições onde são entrados os operandos e operação, bem como onde se registra os códigos de erro e resultados. Por isso, não há
+nenhum código nesta área
+----------------------------------------------------------------------------------------------------------------------------------
+
+Além dos endereços já exlpanados anteriormente, os quais são dedicados puramente ao código do programa, da posição de memória 246 até 255 estão algumas constantes do
+programa.
+De end[246] até end[251] estão os números necessários para indicar o código de erro da operação. O número 1 também foi usado para incremento de certos contadores e o
+zero foi usado para atribuições em posições que as necessitam em algum momento do programa.
+De end[252] até end[255] estão os valor em complemento de 2 de -4, -3, -2, -1, utilizados para o teste de qual operação programa deve realizar.
+
+
+
+
+End.Dado                          COMENTÁRIOS
+  0   32 251   LDA 251---------
+  2   16 242   STA 242        |
+  4   16 131   STA 131        |   INICIALIZAÇÃO DE VARIÁVEIS DE CONTROLE
+  6   16 132   STA 132---------
+  8   32 128   LDA 128------------
+ 10  144  46   JN  46            |
+ 12   32 129   LDA 129           |
+ 14  144  56   JN  56            |
+ 16   32 130   LDA 130           |
+ 18   48 255   ADD 255           |
+ 20  160  68   JZ  68            |
+ 22   32 130   LDA 130           |
+ 24   48 254   ADD 254           |
+ 26  160 133   JZ  133           |
+ 28   32 130   LDA 130           |
+ 30   48 253   ADD 253           |
+ 32  160 120   JZ  120           |
+ 34   32 130   LDA 130           |
+ 36   48 252   ADD 252           |
+ 38  160 192   JZ  192           |
+ 40   32 247   LDA 247           |    GARANTIA DA CONSISTÊNCIA DOS DADOS E DIRECIONAMENTO PARA AS OPERAÇÕES
+ 42   16 131   STA 131           |
+ 44  128 203   JMP 203           |
+ 46   32 129   LDA 129           |
+ 48  144  62   JN  62            |
+ 50   32 250   LDA 250           |
+ 52   16 131   STA 131           |
+ 54  128 203   JMP 203           |
+ 56   32 249   LDA 249           |
+ 58   16 131   STA 131           |
+ 60  128 203   JMP 203           |
+ 62   32 248   LDA 248           |
+ 64   16 131   STA 131           |
+ 66  128 203   JMP 203------------
+ 68   32 129   LDA 129-------------
+ 70  160 108   JZ  108            |
+ 72   48 255   ADD 255            |
+ 74  160 114   JZ  114            |
+ 76   32 129   LDA 129            |
+ 78   16 245   STA 245            |
+ 80   32 128   LDA 128            |
+ 82   16 244   STA 244            |
+ 84   32 244   LDA 244            | 
+ 86   48 128   ADD 128            |
+ 88   16 244   STA 244            |
+ 90   32 245   LDA 245            |
+ 92   48 255   ADD 255            |
+ 94   16 245   STA 245            |
+ 96   48 255   ADD 255            |
+ 98  160 102   JZ  102            |  MULTIPLICAÇÃO
+100  128  84   JMP 84             |
+102   32 244   LDA 244            |
+104   16 132   STA 132            |
+106  128 203   JMP 203            |
+108   32 251   LDA 251            |
+110   16 132   STA 132            |
+112  128 203   JMP 203            |
+114   32 128   LDA 128            |
+116   16 132   STA 132            |
+118  128 203   JMP 203-------------
+120   32 128   LDA 128--------------
+122   48 129   ADD 129             |       SOMA
+124   16 132   STA 132             |
+126  128 203   JMP 203--------------
+
+128    0      
+129    0      
+130    0      
+131    0      
+132    0
+      
+133   32 129   LDA 129------------
+135  160 166   JZ  166           |
+137   48 255   ADD 255           |
+139  160 172   JZ  172           |
+141   32 128   LDA 128           |
+143   16 243   STA 243           |
+145   32 129   LDA 129           |
+147   96       NOT               |
+148   48 250   ADD 250           |
+150   48 243   ADD 243           |
+152  144 178   JN  178           |
+154  160 184   JZ  184           |
+156   16 243   STA 243           |
+158   32 242   LDA 242           |
+160   48 250   ADD 250           |DIVISÃO
+162   16 242   STA 242           |
+164  128 145   JMP 145           |
+166   32 246   LDA 246           |
+168   16 131   STA 131           |
+170  128 203   JMP 203           |
+172   32 128   LDA 128           |
+174   16 132   STA 132           |
+176  128 203   JMP 203           |
+178   32 242   LDA 242           |
+180   16 132   STA 132           |
+182  128 203   JMP 203           |
+184   32 242   LDA 242           |
+186   48 250   ADD 250           |
+188   16 132   STA 132           |
+190  128 203   JMP 203------------
+192   32 129   LDA 129--------------
+194   96       NOT                 |
+195   48 250   ADD 250             |
+197   48 128   ADD 128             |SUBTRAÇÃO
+199   16 132   STA 132             |
+201  128 203   JMP 203--------------  
+203   32 251   LDA 251     Zera acumulador
+205  240       HLT      
+206    0      
+207    0      
+208    0      
+209    0      
+210    0      
+211    0      
+212    0      
+213    0      
+214    0      
+215    0      
+216    0      
+217    0      
+218    0      
+219    0      
+220    0      
+221    0      
+222    0      
+223    0      
+224    0      
+225    0      
+226    0      
+227    0      
+228    0      
+229    0      
+230    0      
+231    0      
+232    0      
+233    0      
+234    0      
+235    0      
+236    0      
+237    0      
+238    0      
+239    0      
+240    0      
+241    0      
+242    0-------------      
+243    0            |VARIÁVEIS      
+244    0            |
+245    0-------------
+246    5-------------      
+247    4            |
+248    3            |
+249    2            |
+250    1            |
+251    0            |CONSTANTES
+252  252            |
+253  253            |
+254  254            |
+255  255-------------
